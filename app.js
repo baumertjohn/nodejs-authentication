@@ -43,3 +43,13 @@ app.post("/register", function (req, res) {
     }
   );
 });
+
+app.post("/login", function (req, res) {
+  User.findOne({ email: req.body.username }, function (err, result) {
+    if (!err) {
+      if (result.password === req.body.password) {
+        res.render("secrets");
+      }
+    }
+  });
+});
