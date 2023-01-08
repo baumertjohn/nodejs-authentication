@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema({
   email: String,
   password: String,
   googleID: String,
+  secret: String,
 });
 
 // Plugin added to utilize passport and mongoose find or create in the schema.
@@ -63,7 +64,7 @@ passport.use(
       callbackURL: "http://localhost:3000/auth/google/secrets",
     },
     function (accessToken, refreshToken, profile, cb) {
-      console.log(profile);
+      // console.log(profile);
       User.findOrCreate({ googleID: profile.id }, function (err, user) {
         return cb(err, user);
       });
@@ -98,11 +99,33 @@ app.get("/register", function (req, res) {
 });
 
 app.get("/secrets", function (req, res) {
+  User.find({ secret: { $ne: null } }, function (err, foundUsers) {
+    if (!err) {
+      res.render("secrets", { usersWithSecret: foundUsers });
+    }
+  });
+});
+
+app.get("/submit", function (req, res) {
   if (req.isAuthenticated()) {
-    res.render("secrets");
+    res.render("submit");
   } else {
     res.redirect("/login");
   }
+});
+
+app.post("/submit", function (req, res) {
+  const submittedSecret = req.body.secret;
+  // console.log(req.user._id);
+  User.findOneAndUpdate(
+    { _id: req.user._id },
+    { secret: submittedSecret },
+    function (err, foundUser) {
+      if (!err) {
+        res.redirect("/secrets");
+      }
+    }
+  );
 });
 
 app.get("/logout", function (req, res) {
